@@ -9,7 +9,7 @@ function App() {
   const sendMessage = async () => {
     try {
       const res = await API.post('chatbotAPI', '/chat', {
-        body: { threadid: threadId, requestTxt },
+        body: { thread_id: threadId, input_query: requestTxt },
       });
       setResponse(res);
     } catch (error) {
