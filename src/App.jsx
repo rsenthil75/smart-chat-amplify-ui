@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 function App() {
   const [threadId, setThreadId] = useState(null);
@@ -129,7 +130,7 @@ function App() {
                 wordWrap: "break-word",
               }}
             >
-              {msg.text}
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
             </div>
           </div>
         ))}
