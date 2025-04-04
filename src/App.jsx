@@ -26,10 +26,12 @@ function App() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
-      const responseBody = typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+      const responseBody =
+        typeof data.body === "string" ? JSON.parse(data.body) : data.body;
 
       console.log("API raw data:", data);
       console.log("Parsed response body:", responseBody);
@@ -41,18 +43,60 @@ function App() {
       setThreadId(responseBody.thread_id);
 
       // Add bot response
-      setChatHistory((prev) => [...prev, { role: "bot", text: responseBody.answer }]);
-    } catch (error) {
-      console.error("Error:", error);
       setChatHistory((prev) => [
         ...prev,
-        { role: "bot", text: "❌ Something went wrong. Please try again." },
+        { role: "bot", text: responseBody.answer },
       ]);
+    } catch (error) {
+      console.error("Trying Again:", error);
+      try {
+        const response = await fetch(apiUrl, {
+          mode: "cors",
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        const responseBody =
+          typeof data.body === "string" ? JSON.parse(data.body) : data.body;
+
+        console.log("API raw data:", data);
+        console.log("Parsed response body:", responseBody);
+
+        if (!responseBody?.thread_id || !responseBody?.answer) {
+          throw new Error("Invalid API response format.");
+        }
+
+        setThreadId(responseBody.thread_id);
+
+        // Add bot response
+        setChatHistory((prev) => [
+          ...prev,
+          { role: "bot", text: responseBody.answer },
+        ]);
+      } catch (error) {
+        console.error("Still Error:", error);
+        setChatHistory((prev) => [
+          ...prev,
+          { role: "bot", text: "❌ Something went wrong. Please try again." },
+        ]);
+      }
     }
   }
 
   return (
-    <div style={{ maxWidth: "600px", margin: "auto", padding: "20px", fontFamily: "Arial" }}>
+    <div
+      style={{
+        maxWidth: "600px",
+        margin: "auto",
+        padding: "20px",
+        fontFamily: "Arial",
+      }}
+    >
       <h2>Chatbot</h2>
 
       <div
@@ -67,7 +111,13 @@ function App() {
         }}
       >
         {chatHistory.map((msg, index) => (
-          <div key={index} style={{ textAlign: msg.role === "user" ? "right" : "left", margin: "5px 0" }}>
+          <div
+            key={index}
+            style={{
+              textAlign: msg.role === "user" ? "right" : "left",
+              margin: "5px 0",
+            }}
+          >
             <div
               style={{
                 display: "inline-block",
